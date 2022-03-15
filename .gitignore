@@ -4,3 +4,6 @@ zips
 algs4
 stdlib
 NOTES.md
+*.class
+*.zip
+*.txt
