@@ -6,7 +6,7 @@ import edu.princeton.cs.algs4.StdOut;
 public class Solver {
     private class Node implements Comparable<Node> {
         Board board;
-        int moves, manhattan, priority;
+        int priority, manhattan, moves;
         Node previous;
 
         public int compareTo(Node that) {
@@ -19,26 +19,15 @@ public class Solver {
             }
 
             else {
-                if (this.manhattan > that.manhattan) {
-                    return 1;
-                }
-
-                else if (this.manhattan < that.manhattan) {
-                    return -1;
-                }
-
-                else {
-                    return 0;
-                }
+                return 0;
             }
-
         }
     }
     
     // p___ refers to primary operations, t___refers to the twin operations used to check whether the board is solvable
     private Node finalNode;
-    private final int solutionMoves;
     private boolean solvable;
+    private int finalMoves;
 
     // find a solution to the initial board (using the A* algorithm)
     public Solver(Board initial) {
@@ -47,15 +36,12 @@ public class Solver {
         }
         final MinPQ<Node> pQueue = new MinPQ<Node>();
         final MinPQ<Node> tQueue = new MinPQ<Node>();
-        final Board pInitial, tInitial;
 
         // Add the first node (corresponds to the initial board) to the PQ
-        pInitial = initial;
-        tInitial = initial.twin();
         Node pNode = new Node();
         Node tNode = new Node();
-        pNode.board = pInitial;
-        tNode.board = tInitial;
+        pNode.board = initial;
+        tNode.board = initial.twin();
         pNode.moves = 0;
         tNode.moves = 0;
         pNode.manhattan = pNode.board.manhattan();
@@ -67,70 +53,68 @@ public class Solver {
         pQueue.insert(pNode);
         tQueue.insert(tNode);
 
-        int i = 0;
-
         // Perform A* search algorithm until it is solved (goal board found)
         while (!pNode.board.isGoal() && !tNode.board.isGoal()) {
             for (Board b : pNode.board.neighbors()) {
                 // Avoid referencing null previous board on first iteration
-                if (i == 0) {
+                if (pNode.previous == null) {
                     Node n = new Node();
                     n.board = b;
-                    n.manhattan = b.manhattan();
-                    n.moves = i;
-                    n.priority = n.manhattan + n.moves;
                     n.previous = pNode;
+                    n.moves = n.previous.moves + 1;
+                    n.manhattan = b.manhattan();
+                    n.priority = n.manhattan + n.moves;
                     pQueue.insert(n);
                 }
                 // Iterate through adjacent boards and add them to the PQ
                 else {
                     // Critical Optimization: Detect whether the board is a repeat of a previous search node
-                    if (!b.equals(pNode.previous.board)) {
+                    if (pNode.previous.manhattan != b.manhattan() || !b.equals(pNode.previous.board)) {
                         Node n = new Node();
                         n.board = b;
-                        n.manhattan = b.manhattan();
-                        n.moves = i;
-                        n.priority = n.manhattan + n.moves;
                         n.previous = pNode;
+                        n.moves = n.previous.moves + 1;
+                        n.manhattan = b.manhattan();
+                        n.priority = n.manhattan + n.moves;
                         pQueue.insert(n);
-                    }
+                    }                  
                 }
             }
 
             for (Board b : tNode.board.neighbors()) {
                 // Avoid referencing null previous board on first iteration
-                if (i == 0) {
+                if (tNode.previous == null) {
                     Node n = new Node();
                     n.board = b;
+                    n.previous = pNode;
+                    n.moves = n.previous.moves + 1;
                     n.manhattan = b.manhattan();
-                    n.moves = i;
                     n.priority = n.manhattan + n.moves;
-                    n.previous = tNode;
                     tQueue.insert(n);
                 }
                 // Iterate through adjacent boards and add them to the PQ
                 else {
                     // Critical Optimization: Detect whether the board is a repeat of a previous search node
-                    if (!b.equals(tNode.previous.board)) {
+                    if (tNode.previous.manhattan != b.manhattan() || !b.equals(tNode.previous.board)) {
                         Node n = new Node();
                         n.board = b;
+                        n.previous = pNode;
+                        n.moves = n.previous.moves + 1;
                         n.manhattan = b.manhattan();
-                        n.moves = i;
                         n.priority = n.manhattan + n.moves;
-                        n.previous = tNode;
                         tQueue.insert(n);
                     }
                 }
             }
+            
             // Remove the lowest priority node from the PQ
             pNode = pQueue.delMin();
             tNode = tQueue.delMin();
-            i++;
         }
 
-        solutionMoves = i;
         if (pNode.board.isGoal()) {
             finalNode = pNode;
+            finalMoves = pNode.moves;
             solvable = true;
         }
 
@@ -152,7 +136,7 @@ public class Solver {
         }
 
         else {
-            return solutionMoves;
+            return finalMoves;
         }
     }
 

@@ -5,7 +5,6 @@ import edu.princeton.cs.algs4.StdRandom;
 
 public class Board {
 
-    private final int[][] goalBoard;
     private final int[][] tiles;
     private final int n;
     private Board twinBoard;
@@ -16,15 +15,12 @@ public class Board {
     public Board(int[][] tiles) {
         // Initialize instance variable tiles and generate goal board
         this.n = tiles[0].length;
-        this.goalBoard = new int[n][n];
         this.tiles = new int[n][n];
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                this.goalBoard[i][j] = i * n + j + 1;
                 this.tiles[i][j] = tiles[i][j];
             }
         }
-        this.goalBoard[n-1][n-1] = 0;
     }     
 
     // string representation of this board
@@ -50,7 +46,7 @@ public class Board {
         int count = 0;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                if (tiles[i][j] != goalBoard[i][j]) {
+                if (tiles[i][j] != i * n + j + 1) {
                     if (tiles[i][j] != 0) {
                         count++;
                     }
@@ -65,7 +61,7 @@ public class Board {
         int squares = 0;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                if ((tiles[i][j] != goalBoard[i][j]) && tiles[i][j] != 0) {
+                if (tiles[i][j] != i * n + j + 1 && tiles[i][j] != 0) {
                     // Compute the distance (number of squares) from the current location to the goal
                     int value = tiles[i][j] - 1;
                     int iGoal = value / n;
@@ -79,7 +75,20 @@ public class Board {
 
     // is this board the goal board?
     public boolean isGoal() {
-        return Arrays.deepEquals(tiles, goalBoard);
+        if (tiles[n - 1][n - 1] == 0) {
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    if (tiles[i][j] != i * n + j + 1 && !(i == n - 1 && j == n - 1)) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        else {
+            return false;
+        }
     }
 
     // does this board equal y?
